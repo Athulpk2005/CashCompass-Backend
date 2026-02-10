@@ -187,7 +187,8 @@ app.use((err, req, res, next) => {
   
   res.status(500).json({ 
     error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+    message: err.message || 'An unexpected error occurred',
+    path: req.path
   });
 });
 
