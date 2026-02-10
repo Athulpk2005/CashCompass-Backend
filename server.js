@@ -48,6 +48,9 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 
+// Security: Trust proxy for express-rate-limit behind Cloudflare
+app.set('trust proxy', 1);
+
 // Security: CORS - must be before rate limiter to handle OPTIONS preflight
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
