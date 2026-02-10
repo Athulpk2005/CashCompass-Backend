@@ -80,7 +80,16 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 // Connect to MongoDB
-connectDB();
+let dbConnected = false;
+connectDB().then((result) => {
+  if (result && result.success) {
+    dbConnected = true;
+  } else {
+    console.warn('Server started without database connection. Please check MongoDB configuration.');
+  }
+}).catch((err) => {
+  console.error('Unexpected error during DB connection:', err);
+});
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -97,19 +106,31 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware to check database connection
+const requireDB = (req, res, next) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database not available',
+      message: 'Please try again later'
+    });
+  }
+  next();
+};
+
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/goals', goalRoutes);
-app.use('/api/investments', investmentRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/auth', requireDB, authRoutes);
+app.use('/api/transactions', requireDB, transactionRoutes);
+app.use('/api/goals', requireDB, goalRoutes);
+app.use('/api/investments', requireDB, investmentRoutes);
+app.use('/api/reports', requireDB, reportRoutes);
+app.use('/api/notifications', requireDB, notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'CashCompass API is running',
+    database: dbConnected ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString()
   });
 });
