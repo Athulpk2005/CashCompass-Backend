@@ -18,9 +18,6 @@ const investmentRoutes = require('./routes/investmentRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 
-const fs = require('fs');
-const path = require('path');
-
 // Ensure logs directory exists
 const logsDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logsDir)) {
