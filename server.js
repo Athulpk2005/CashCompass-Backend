@@ -56,20 +56,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Security: Helmet for HTTP headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "http://localhost:5000", "https://fonts.googleapis.com"]
-    }
-  },
-  crossOriginEmbedderPolicy: false
-}));
+// Security: Helmet for HTTP headers (CSP handled by frontend meta tag)
+app.use(helmet());
 
 // Request logging with morgan
 if (process.env.NODE_ENV === 'production') {
