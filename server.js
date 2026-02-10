@@ -160,6 +160,16 @@ app.use('/api/investments', requireDB, investmentRoutes);
 app.use('/api/reports', requireDB, reportRoutes);
 app.use('/api/notifications', requireDB, notificationRoutes);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'CashCompass API is running',
+    version: '1.0.0',
+    documentation: '/api/health',
+    endpoints: ['/api/auth', '/api/transactions', '/api/goals', '/api/investments', '/api/reports', '/api/notifications']
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
