@@ -79,17 +79,38 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Connect to MongoDB
+// Connect to MongoDB with retry logic
 let dbConnected = false;
-connectDB().then((result) => {
-  if (result && result.success) {
-    dbConnected = true;
-  } else {
-    console.warn('Server started without database connection. Please check MongoDB configuration.');
+let retryCount = 0;
+const maxRetries = 5;
+
+const connectWithRetry = async () => {
+  try {
+    const result = await connectDB();
+    if (result && result.success) {
+      dbConnected = true;
+      logger.info('Database connection established');
+    } else {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        logger.warn(`Database connection failed, retrying (${retryCount}/${maxRetries})...`);
+        setTimeout(connectWithRetry, 5000);
+      } else {
+        logger.error('Database connection failed after maximum retries');
+      }
+    }
+  } catch (err) {
+    if (retryCount < maxRetries) {
+      retryCount++;
+      logger.error(`Database connection error: ${err.message}, retrying (${retryCount}/${maxRetries})...`);
+      setTimeout(connectWithRetry, 5000);
+    } else {
+      logger.error('Database connection failed after maximum retries');
+    }
   }
-}).catch((err) => {
-  console.error('Unexpected error during DB connection:', err);
-});
+};
+
+connectWithRetry();
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -109,9 +130,10 @@ app.use((req, res, next) => {
 // Middleware to check database connection
 const requireDB = (req, res, next) => {
   if (!dbConnected) {
+    logger.warn(`Database not connected, blocking request to ${req.path}`);
     return res.status(503).json({ 
-      error: 'Database not available',
-      message: 'Please try again later'
+      error: 'Service Unavailable',
+      message: 'Database connection not established. Please try again later.'
     });
   }
   next();
@@ -137,10 +159,35 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error(err.stack);
+  logger.error(`Error: ${err.message}`, { stack: err.stack, path: req.path, method: req.method });
+  
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      error: 'Validation Error',
+      message: Object.values(err.errors).map(e => e.message).join(', ')
+    });
+  }
+  
+  // Mongoose cast error (invalid ObjectId)
+  if (err.name === 'CastError') {
+    return res.status(400).json({ 
+      error: 'Invalid ID',
+      message: 'The provided ID is not valid'
+    });
+  }
+  
+  // Mongoose duplicate key error
+  if (err.code === 11000) {
+    return res.status(400).json({ 
+      error: 'Duplicate Error',
+      message: 'A record with this value already exists'
+    });
+  }
+  
   res.status(500).json({ 
     error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
   });
 });
 
