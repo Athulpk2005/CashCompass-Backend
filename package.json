@@ -12,7 +12,13 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["finance", "tracker", "api", "express", "mongodb"],
+  "keywords": [
+    "finance",
+    "tracker",
+    "api",
+    "express",
+    "mongodb"
+  ],
   "author": "CashCompass",
   "license": "ISC",
   "dependencies": {
@@ -21,7 +27,7 @@
     "dotenv": "^16.3.1",
     "express": "^5.2.1",
     "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^7.1.5",
+    "express-rate-limit": "7.1.5",
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
