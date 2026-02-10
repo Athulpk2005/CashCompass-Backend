@@ -69,16 +69,15 @@ if (process.env.NODE_ENV === 'production') {
   app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
 }
 
-// Security: Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.ip // Use IP directly
-});
-app.use('/api/', limiter);
+// Security: Rate limiting (temporarily disabled due to Cloudflare issue)
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per windowMs
+//   message: { error: 'Too many requests, please try again later.' },
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+// app.use('/api/', limiter);
 
 // Connect to MongoDB with retry logic
 let dbConnected = false;
