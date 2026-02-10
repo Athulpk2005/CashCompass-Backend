@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: cashcompass-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: mongodb
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://cashcompass-a9996.web.app
+
+databases:
+  - name: mongodb
+    plan: free
