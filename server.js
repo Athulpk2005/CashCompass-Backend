@@ -6,6 +6,8 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const morgan = require('morgan');
 const winston = require('winston');
+const fs = require('fs');
+const path = require('path');
 const connectDB = require('./config/db');
 
 // Import routes
@@ -15,6 +17,15 @@ const goalRoutes = require('./routes/goalRoutes');
 const investmentRoutes = require('./routes/investmentRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+
+const fs = require('fs');
+const path = require('path');
+
+// Ensure logs directory exists
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Winston logger configuration
 const logger = winston.createLogger({
@@ -26,8 +37,8 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'cashcompass-api' },
   transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.File({ filename: path.join(logsDir, 'error.log'), level: 'error' }),
+    new winston.transports.File({ filename: path.join(logsDir, 'combined.log') }),
   ],
 });
 
@@ -116,10 +127,15 @@ connectWithRetry();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Security: MongoDB query sanitization (skip in test environment due to supertest incompatibility)
-if (process.env.NODE_ENV !== 'test') {
-  app.use(mongoSanitize());
-}
+// Security: MongoDB query sanitization
+// Only sanitize actual query parameters, not the entire query object
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    mongoSanitize()(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // Security: XSS protection headers
 app.use((req, res, next) => {
