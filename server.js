@@ -57,7 +57,19 @@ app.use(cors({
 }));
 
 // Security: Helmet for HTTP headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "http://localhost:5000", "https://fonts.googleapis.com"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
 
 // Request logging with morgan
 if (process.env.NODE_ENV === 'production') {
