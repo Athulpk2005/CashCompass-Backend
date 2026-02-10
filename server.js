@@ -57,7 +57,9 @@ app.use(cors({
 }));
 
 // Security: Helmet for HTTP headers (CSP handled by frontend meta tag)
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
 
 // Request logging with morgan
 if (process.env.NODE_ENV === 'production') {
